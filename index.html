@@ -1,0 +1,641 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>LSPD Incident Report Form</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <style>
+            /* --- CSS UTAMA & RESPONSIF --- */
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #e7eaf2;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 10px;
+                font-size: 12px;
+                margin: 0;
+            }
+
+            /* Container menggunakan max-width agar responsif di layar kecil */
+            .report-container {
+                background-color: white;
+                width: 100%;
+                max-width: 850px;
+                border: 2px solid #0a1c3f;
+                padding: 15px;
+                box-shadow: 0 0 12px rgba(10,28,63,0.18);
+                box-sizing: border-box;
+            }
+
+            .report-header {
+                text-align: center;
+                position: relative;
+                border-bottom: 3px solid #0a1c3f;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                background: linear-gradient(180deg, #f4f6fb 0%, #ffffff 70%);
+            }
+
+            .header-main {
+                display: grid;
+                grid-template-columns: auto 1fr 120px;
+                align-items: center;
+            }
+
+            .header-badge {
+                flex-shrink: 0;
+                width: 85px;
+                height: 85px;
+                margin-left: 5px;
+            }
+
+            .header-text {
+                text-align: center;
+                justify-self: center;
+            }
+
+            .official-use {
+                 position: absolute;
+                right: 0;
+                top: 0;
+                width: 110px;
+                font-size: 10px;
+                text-align: right;
+                font-weight: bold;
+                color: #0a1c3f;
+                border: none;
+                padding: 3px 5px;
+                background-color: none;
+            }
+
+            h1, h2, h3 { margin: 2px 0; }
+            h1 { font-size: 19px; text-transform: uppercase; letter-spacing: 1px; color: #0a1c3f; }
+            h2 { font-size: 22px; color: #16336b; font-weight: bold; letter-spacing: 0.5px; }
+            h3 { text-decoration: underline; margin-top: 10px; color: #0a1c3f; }
+
+            .sa-state {
+                font-size: 14px;
+                margin: 2px 0;
+            }
+
+            .form-section {
+                border: 1px solid #0a1c3f;
+                margin-bottom: 10px;
+            }
+
+            .section-title {
+                background-color: #e0e0e0;
+                color: black;
+                padding: 3px 10px;
+                font-weight: bold;
+                border-bottom: 1px solid #000;
+                font-size: 11px;
+                letter-spacing: 0.5px;
+            }
+
+            .input-group {
+                display: flex;
+                align-items: center;
+                padding: 5px;
+                border-bottom: 0.5px solid #ccc;
+                box-sizing: border-box;
+            }
+
+            .input-group label {
+                margin-right: 10px;
+                font-weight: bold;
+                white-space: nowrap;
+                color: #0a1c3f;
+            }
+
+            input[type="text"], input[type="date"], input[type="time"], select, textarea {
+                border: none;
+                border-bottom: 1px solid #c3cbdd;
+                width: 100%;
+                outline: none;
+                font-family: 'Courier New', Courier, monospace;
+                background-color: transparent;
+                color: #111;
+            }
+
+            .top-bar {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                border: 2px solid #0a1c3f;
+                margin-bottom: 10px;
+                background-color: #eef1f8;
+            }
+
+            .top-bar .input-group {
+                border: none;
+                border-right: 1px solid #0a1c3f;
+            }
+
+            .top-bar .input-group:last-child {
+                border-right: none;
+            }
+
+            /* Grid Layouts */
+            .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+            .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+            .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+            .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+            textarea {
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                border: none;
+                resize: none;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                overflow: hidden;
+            }
+
+            .checkbox-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .form-footer {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 20px;
+                border-top: 2px solid #0a1c3f;
+                padding-top: 20px;
+            }
+
+            .signature-block {
+                text-align: center;
+                width: 45%;
+                max-width: 200px;
+            }
+
+            .signature-block p {
+                color: #0a1c3f;
+                font-weight: bold;
+            }
+
+            .sig-input {
+                font-family: 'Brush Script MT', cursive;
+                font-size: 18px;
+                text-align: center;
+                color: #16336b;
+            }
+
+            .footer-note {
+                text-align: center;
+                font-size: 9px;
+                margin-top: 15px;
+                color: #555;
+                letter-spacing: 0.5px;
+            }
+
+            /* Container Tombol Export */
+            .export-container {
+                width: 100%;
+                max-width: 850px;
+                display: flex;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+                margin-bottom: 15px;
+                margin-top: 15px;
+                box-sizing: border-box;
+            }
+
+            .export-btn:hover {
+                filter: brightness(1.25);
+                box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+                transform: translateY(-1px);
+            }
+
+            .export-btn:active {
+                transform: translateY(1px);
+            }
+
+            /* --- MEDIA QUERIES UNTUK TAMPILAN HP / MOBILE --- */
+            @media screen and (max-width: 600px) {
+                body { padding: 5px; }
+                .report-container { padding: 10px; }
+                
+                .official-use {
+                    position: static;
+                    width: 100%;
+                    text-align: center;
+                    margin-top: 5px;
+                    border: 1px dashed #16336b;
+                    padding: 2px 0;
+                }
+
+                .header-main {
+                    flex-direction: column;
+                }
+
+                /* Ubah grid baris menjadi 1 kolom saja di HP */
+                .top-bar { grid-template-columns: 1fr; }
+                .top-bar .input-group { border-right: none; border-bottom: 1px solid #0a1c3f; }
+                .top-bar .input-group:last-child { border-bottom: none; }
+
+                .grid-4, .grid-3, .grid-2, .grid-2-col {
+                    grid-template-columns: 1fr !important;
+                    gap: 0;
+                }
+                
+                /* Beri batas bawah antar section yang tadinya bersebelahan */
+                .grid-2-col .form-section {
+                    margin-bottom: 10px;
+                }
+
+                .form-footer {
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 20px;
+                }
+                .signature-block { width: 100%; }
+            }
+
+            /* Penyesuaian Cetak & Modifikasi Html2Canvas */
+            #report-content { box-shadow: none !important; }
+            @media print { .no-print { display: none; } }
+        </style>
+    </head>
+    <body>
+
+    <div class="report-container" id="report-content">
+        <header class="report-header">
+            <div class="header-main">
+                <img src="assets\LSPD-SEALS.png" alt="LSPD Badge" class="header-badge">
+                <div class="header-text">
+                    <h2>CITY OF LOS SANTOS</h2>
+                    <h1>POLICE DEPARTMENT</h1>
+                    <p class="sa-state">San Andreas State</p>
+                    <h3>INCIDENT REPORT</h3>
+                </div>
+            </div>
+            <div class="official-use">FOR OFFICIAL USE ONLY</div>
+        </header>
+
+        <form>
+            <div class="top-bar">
+                <div class="input-group">
+                    <label>URN:</label>
+                    <input type="text" placeholder="26-XXXX-CCCC">
+                </div>
+                <div class="input-group">
+                    <label>DR#:</label>
+                    <input type="text" placeholder="26-CCCC-CCCC">
+                </div>
+                <div class="input-group">
+                    <label>PRECINCT:</label>
+                    <select>
+                        <option>-</option>
+                        <option>East Los Santos</option>
+                        <option>San Fierro</option>
+                        <option>Central Headquarters</option>
+                        <option>Dillimore</option>
+                    </select>
+                </div>
+            </div>
+
+            <section class="form-section">
+                <div class="section-title">INCIDENT INFORMATION</div>
+                <div class="grid-4">
+                    <div class="input-group"><label>DATE:</label><input type="date"></div>
+                    <div class="input-group"><label>TIME:</label><input type="time"></div>
+                    <div class="input-group"><label>BEAT:</label><input type="text"></div>
+                    <div class="input-group"><label>UNIT:</label><input type="text"></div>
+                </div>
+                <div class="grid-1">
+                    <div class="input-group"><label>LOCATION:</label><input type="text" placeholder="street address, District, Los Santos"></div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>INCIDENT TYPE:</label>
+                        <select>
+                            <option>-</option>
+                            <option>187 - Homicide</option>
+                            <option>211 - Robbery</option>
+                            <option>459 - Burglary</option>
+                            <option>245 - Assault</option>
+                            <option>487 - Grand Theft</option>
+                            <option>484 - Petty Theft</option>
+                            <option>595 - Vandalism</option>
+                            <option>647 - public disturbance</option>
+                            <option>Vehicle Code</option>
+                            <option>Other</option>
+                    </select>
+                    </div>
+                    <div class="input-group">
+                        <label>CLASSIFICATION:</label>
+                        <select>
+                            <option>-</option>
+                            <option>FELONY</option>
+                            <option>MISDEMEANOR</option>
+                            <option>INFRACTION</option>
+                            <option>CIVIL</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid-2-col">
+                <section class="form-section">
+                    <div class="section-title">VICTIM/REPORTING PARTY</div>
+                    <div class="input-group"><label>NAME:</label><input type="text"></div>
+                    <div class="grid-3">
+                        <div class="input-group"><label>AGE:</label><input type="text"></div>
+                        <div class="input-group"><label>SEX:</label>
+                            <select>
+                                <option>-</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+                        <div class="input-group"><label>RACE:</label>
+                            <select>
+                                <option>-</option>
+                                <option>White</option>
+                                <option>Black</option>
+                                <option>Hispanic</option>
+                                <option>Asian</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group"><label>PHONE:</label><input type="text"></div>
+                </section>
+
+                <section class="form-section">
+                    <div class="section-title">SUSPECT INFORMATION</div>
+                    <div class="input-group"><label>NAME:</label><input type="text"></div>
+                    <div class="grid-3"> <!-- Diubah ke grid-3 agar sejajar dengan bagian korban -->
+                        <div class="input-group"><label>AGE:</label><input type="text"></div>
+                        <div class="input-group"><label>SEX:</label>
+                            <select>
+                                <option>-</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+                        <div class="input-group"><label>RACE:</label>
+                            <select>
+                                <option>-</option>
+                                <option>White</option>
+                                <option>Black</option>
+                                <option>Hispanic</option>
+                                <option>Asian</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group"><label>DESCRIPTION:</label><input type="text"></div>
+                </section>
+            </div>
+
+            <section class="form-section">
+                <div class="section-title">NARRATIVE SUMMARY</div>
+                <textarea rows="6" placeholder="Brief description of incident: What happened, when, where. Actions taken by officers. Statements from parties involved. Any follow-up required."></textarea>
+            </section>
+
+            <div class="grid-2-col">
+                <section class="form-section">
+                    <div class="section-title">REPORTING OFFICER</div>
+                    <div class="input-group"><label>NAME:</label><input type="text" id="deputy-name-input" placeholder="Lastname, Firstname"></div>
+                    <div class="grid-2">
+                        <div class="input-group"><label>BADGE#:</label><input type="text"></div>
+                        <div class="input-group"><label>UNIT:</label><input type="text"></div>
+                    </div>
+                    <div class="input-group"><label>SUPERVISOR:</label><input type="text" id="supervisor-name-input" placeholder="Lastname, Firstname"></div>
+                </section>
+
+                <section class="form-section">
+                    <div class="section-title">DISPOSITION</div>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox"> REPORT COMPLETED</label>
+                        <label><input type="checkbox"> ARREST MADE</label>
+                        <label><input type="checkbox"> CITATION ISSUED</label>
+                        <label><input type="checkbox"> TO DETECTIVE</label>
+                        <label><input type="checkbox"> UNFOUNDED</label>
+                        <label><input type="checkbox"> CIVIL MATTER</label>
+                    </div>
+                </section>
+            </div>
+
+            <footer class="form-footer">
+                <div class="signature-block">
+                    <input type="text" id="deputy-sig-input" class="sig-input" placeholder="Lastname, Firstname" readonly>
+                    <p>REPORTING OFFICER</p>
+                    <input type="date">
+                </div>
+                <div class="signature-block">
+                    <input type="text" id="supervisor-sig-input" class="sig-input" placeholder="Lastname, Firstname" readonly>
+                    <p>SUPERVISOR</p>
+                    <input type="date">
+                </div>
+            </footer>
+        </form>
+        <div class="footer-note">LSPD PD-R-49 - FOR OFFICIAL USE ONLY</div>
+    </div>
+
+    <div class="export-container no-print" style="gap: 10px;">
+        <button id="btn-export" data-format="jpg" class="export-btn" style="
+            padding: 10px 24px; 
+            cursor: pointer; 
+            background: #0a1c3f; 
+            color: white; 
+            border: 2px solid #061229; 
+            border-radius: 6px; 
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;">
+            <span style="font-size: 16px;">💾</span> PRINT TO PNG
+        </button>
+        <button id="btn-export-png" data-format="png" class="export-btn" style="
+            padding: 10px 24px; 
+            cursor: pointer; 
+            background: #16336b; 
+            color: white; 
+            border: 2px solid #0a1c3f; 
+            border-radius: 6px; 
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;">
+            <span style="font-size: 16px;">🖼️</span> PRINT TO JPG
+        </button>
+        <button id="btn-export-pdf" data-format="pdf" class="export-btn" style="
+            padding: 10px 24px; 
+            cursor: pointer; 
+            background: #000000; 
+            color: white; 
+            border: 2px solid #0a1c3f; 
+            border-radius: 6px; 
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;">
+            <span style="font-size: 16px;">📄</span> EXPORT KE PDF
+        </button>
+    </div>
+
+    <script>
+        // Sinkronisasi Nama ke Tanda Tangan
+        const nameInput = document.getElementById('deputy-name-input');
+        const sigInput = document.getElementById('deputy-sig-input');
+        nameInput.addEventListener('input', function() { sigInput.value = nameInput.value; });
+
+        const supervisorNameInput = document.getElementById('supervisor-name-input');
+        const supervisorSigInput = document.getElementById('supervisor-sig-input');
+        supervisorNameInput.addEventListener('input', function() { supervisorSigInput.value = supervisorNameInput.value; });
+
+        // Ekspor Laporan (JPG / PNG / PDF) - Tetap mempertahankan layout desktop/asli saat diexport
+        function exportReport(format, triggerBtn) {
+            const report = document.getElementById('report-content');
+            const inputs = report.querySelectorAll("input, textarea, select");
+            const tempReplacements = [];
+            const allExportBtns = document.querySelectorAll('.export-btn');
+
+            allExportBtns.forEach(b => b.style.visibility = "hidden");
+
+            inputs.forEach(el => {
+                const replacement = document.createElement("div");
+                let val = "";
+                if (el.tagName === "SELECT") {
+                    val = el.options[el.selectedIndex].text;
+                    if (val === "-") val = "";
+                } else if (el.type === "checkbox") {
+                    val = el.checked ? "☑" : "☐";
+                    replacement.style.fontFamily = "'Arial', sans-serif";
+                } else {
+                    val = el.value;
+                }
+
+                replacement.innerText = val || " "; 
+                const style = window.getComputedStyle(el);
+                if (el.type !== "checkbox") { replacement.style.fontFamily = style.fontFamily; }
+                replacement.style.fontSize = style.fontSize;
+                replacement.style.color = "#333";
+                replacement.style.padding = style.padding;
+                replacement.style.lineHeight = style.lineHeight;
+                replacement.style.whiteSpace = "pre-wrap";
+                replacement.style.wordWrap = "break-word";
+                
+                if (el.type === "checkbox") {
+                    replacement.style.display = "inline-block";
+                    replacement.style.marginRight = "5px";
+                    replacement.style.verticalAlign = "middle";
+                } else {
+                    replacement.style.display = "inline-block";
+                }
+                
+                if (el.tagName === "INPUT" && el.type !== "checkbox") {
+                    replacement.style.borderBottom = "1px solid #eee";
+                    replacement.style.minWidth = el.offsetWidth + "px";
+                }
+                
+                if (el.tagName === "TEXTAREA") {
+                    replacement.style.width = "100%";
+                    replacement.style.minHeight = el.offsetHeight + "px";
+                    replacement.style.display = "block";
+                }
+
+                if (el.type === "checkbox") {
+                    el.style.opacity = "0";
+                    el.style.pointerEvents = "none";
+                    el.parentNode.insertBefore(replacement, el);
+                } else {
+                    el.style.display = "none";
+                    el.parentNode.insertBefore(replacement, el);
+                }
+                tempReplacements.push({ original: el, temp: replacement });
+            });
+
+            // Trik khusus: Paksa html2canvas merender dalam mode desktop (lebar 850px) agar hasil tidak berantakan/vertikal
+            html2canvas(report, {
+                scale: 3, 
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                logging: false,
+                windowWidth: 850, // Mengunci lebar render gambar ke 850px
+                windowHeight: report.scrollHeight
+            }).then(canvas => {
+                const timestamp = Date.now();
+
+                if (format === 'jpg') {
+                    const image = canvas.toDataURL("image/jpeg", 1.0);
+                    const link = document.createElement('a');
+                    link.download = `LSPD-Report-${timestamp}.jpg`;
+                    link.href = image;
+                    link.click();
+                } else if (format === 'png') {
+                    const image = canvas.toDataURL("image/png", 1.0);
+                    const link = document.createElement('a');
+                    link.download = `LSPD-Report-${timestamp}.png`;
+                    link.href = image;
+                    link.click();
+                } else if (format === 'pdf') {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+                    // A4 di orientasi portrait (mm), gambar diskalakan agar pas dengan lebar halaman
+                    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                    if (imgHeight <= pageHeight) {
+                        pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+                    } else {
+                        // Jika laporan lebih panjang dari satu halaman A4, bagi ke beberapa halaman
+                        let remainingHeight = canvas.height;
+                        let position = 0;
+                        const pageCanvasHeight = (pageHeight * canvas.width) / imgWidth;
+                        while (remainingHeight > 0) {
+                            const sliceCanvas = document.createElement('canvas');
+                            sliceCanvas.width = canvas.width;
+                            sliceCanvas.height = Math.min(pageCanvasHeight, remainingHeight);
+                            const ctx = sliceCanvas.getContext('2d');
+                            ctx.drawImage(canvas, 0, position, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+                            const sliceData = sliceCanvas.toDataURL("image/jpeg", 1.0);
+                            const sliceImgHeight = (sliceCanvas.height * imgWidth) / canvas.width;
+
+                            if (position > 0) pdf.addPage();
+                            pdf.addImage(sliceData, "JPEG", 0, 0, imgWidth, sliceImgHeight);
+
+                            position += sliceCanvas.height;
+                            remainingHeight -= sliceCanvas.height;
+                        }
+                    }
+                    pdf.save(`LSPD-Report-${timestamp}.pdf`);
+                }
+
+                // Kembalikan ke tampilan responsif semula
+                tempReplacements.forEach(item => {
+                    if (item.original.type === "checkbox") {
+                        item.original.style.opacity = "";
+                        item.original.style.pointerEvents = "";
+                    } else {
+                        item.original.style.display = "";
+                    }
+                    item.temp.remove();
+                });
+                allExportBtns.forEach(b => b.style.visibility = "visible");
+            });
+        }
+
+        document.getElementById('btn-export').addEventListener('click', function() { exportReport('jpg', this); });
+        document.getElementById('btn-export-png').addEventListener('click', function() { exportReport('png', this); });
+        document.getElementById('btn-export-pdf').addEventListener('click', function() { exportReport('pdf', this); });
+    </script>
+    </body>
+    </html>
