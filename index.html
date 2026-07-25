@@ -123,7 +123,7 @@
 
             .top-bar {
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
                 border: 2px solid #0a1c3f;
                 margin-bottom: 10px;
                 background-color: #eef1f8;
@@ -284,22 +284,12 @@
             <div class="top-bar">
                 <div class="input-group">
                     <label>URN:</label>
-                    <input type="text" placeholder="26-XXXX-CCCC">
+                    <input type="text" id="urn" readonly>
                 </div>
                 <div class="input-group">
                     <label>DR#:</label>
-                    <input type="text" placeholder="26-CCCC-CCCC">
-                </div>
-                <div class="input-group">
-                    <label>PRECINCT:</label>
-                    <select>
-                        <option>-</option>
-                        <option>Central Headquarters</option>
-                        <option>East Los Santos</option>
-                        <option>San Fierro</option>
-                        <option>Dillimore</option>
-                    </select>
-                </div>
+                    <input type="text" id="dr" readonly>
+                </div>  
             </div>
 
             <section class="form-section">
@@ -638,6 +628,28 @@
         document.getElementById('btn-export').addEventListener('click', function() { exportReport('jpg', this); });
         document.getElementById('btn-export-png').addEventListener('click', function() { exportReport('png', this); });
         document.getElementById('btn-export-pdf').addEventListener('click', function() { exportReport('pdf', this); });
+    
+        function generateURN() {
+            const now = new Date();
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 900000) + 100000;
+            return `${year}-${random}`;
+        }
+
+        function generateDR() {
+        const year = String(new Date().getFullYear()).slice(-2);
+        const random = Math.floor(Math.random() * 900000) + 100000;
+
+        return `${year}-${random}`;
+        }
+
+        window.onload = function () {
+            document.getElementById('urn').value = generateURN();
+            document.getElementById('dr').value = generateDR();
+        };
     </script>
     </body>
     </html>
